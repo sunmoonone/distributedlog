@@ -1,4 +1,7 @@
-[![Build Status](https://travis-ci.org/twitter/distributedlog.svg?branch=master)](https://travis-ci.org/twitter/distributedlog)
+> We moved the developement of DistributedLog to Apache Incubator. http://incubator.apache.org/projects/distributedlog.html
+> MailList: dev@distributedlog.incubator.apache.org (Subscribe: dev-subscribe@dev@distributedlog.incubator.apache.org)
+> Jira: https://issues.apache.org/jira/browse/DL
+> Documentation: https://distributedlog.io
 
 ## Overview
 
@@ -51,10 +54,11 @@ and memory.
 
 ## Getting involved
 
-* Website: https://twitter.github.io/distributedlog/html/
-* Source: https://github.com/twitter/distributedlog
-* Maiing List: [distributedlog-user@googlegroups.com](https://groups.google.com/forum/#!forum/distributedlog-user)
-* Issue Tracker: https://github.com/twitter/distributedlog/issues
+* Website: http://incubator.apache.org/projects/distributedlog.html
+* Documentation: http://distributedlog.io
+* Source: https://git-wip-us.apache.org/repos/asf/incubator-distributedlog.git (GitHub Mirror: https://github.com/apache/incubator-distributedlog)
+* Maiing List: dev@distributedlog.incubator.apache.org (Subscribe: dev-subscribe@dev@distributedlog.incubator.apache.org)
+* Issue Tracker: https://issues.apache.org/jira/browse/DL
 
 We feel that a welcoming community is important and we ask that you follow Twitter's
 [Open Source Code of Conduct](https://engineering.twitter.com/opensource/code-of-conduct)
