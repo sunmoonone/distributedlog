@@ -1,37 +1,35 @@
-Core Library API
+核心库 API
 ================
 
-The distributedlog core library interacts with namespaces and logs directly.
-It is written in Java.
+Distributedlog 核心库直接操作 名空间(namespaces)和日志(logs)。
+核心库使用 java 实现。
 
-Namespace API
+名空间(Namespace) API
 -------------
 
-A DL namespace is a collection of *log streams*. Applications could *create*
-or *delete* logs under a DL namespace.
+DL 的名空间包含多个日志流(log streams). 应用可以创建(create)或者删除(delete)名空间下的日志。
 
-Namespace URI
+名空间 URI
 ~~~~~~~~~~~~~
 
-An **URI** is used to locate the *namespace*. The *Namespace URI* is typically
-comprised of *3* components:
+**URI** 用来定位名空间。名空间 URI 通常由 *3* 部分组成。
 
-* scheme: `distributedlog-<backend>`. The *backend* indicates what backend is used to store the log data.
-* domain name: the domain name that used to talk to the *backend*. In the example as below, the domain name part is *zookeeper server*, which is used to store log metadata in bookkeeper based backend implementation.
-* path: path points to the location that stores logs. In the example as below, it is a zookeeper path that points to the znode that stores all the logs metadata.
+* scheme: `distributedlog-<backend>`. 这里 *backend* 指明使用什么来存储日志数据。
+* 域名: 访问后端(backend)所需要的域名。下面的例子里，域名部分就是 *zookeeper server*, 它用来存储 bookkeeper 作为日志存储后端所需的 metadata 。
+* 路径: 路径指向存储 metadata 的具体地址。下面的例子里，路径指向一个 znode 节点，该节点存储所有日志的 metadata。
 
 ::
 
     distributedlog-bk://<zookeeper-server>/path/to/stream
 
-The available backend is only bookkeeper based backend.
-The default `distributedlog` scheme is aliased to `distributedlog-bk`.
+目前可用的后端只有基于 bookkeeper 这一种。
+默认使用的 scheme `distributedlog` 就是 `distributedlog-bk` 的别名.
 
-Building a Namespace
+构建名空间
 ~~~~~~~~~~~~~~~~~~~~
 
-Once you have the *namespace uri*, you could build the namespace instance.
-The namespace instance will be used for operating streams under it.
+名空间 URI(namespace uri) 定义好之后，你就可以构建一个名空间实例。
+名空间实例将用来操作其下的日志流。
 
 ::
 
@@ -48,11 +46,11 @@ The namespace instance will be used for operating streams under it.
         .featureProvider(...)   // feature provider on controlling features
         .build();
 
-Create a Log
+创建日志
 ~~~~~~~~~~~~
 
-Creating a log is pretty straight forward by calling `distributedlognamespace#createlog(logname)`.
-it only creates the log under the namespace but doesn't return any handle for operating the log.
+通过直接调用 `distributedlognamespace#createlog(logname)` 来创建日志。
+该方法只是在名空间下创建一个日志而不返回供操作日志用的手柄(handle)。
 
 ::
 
@@ -63,13 +61,11 @@ it only creates the log under the namespace but doesn't return any handle for op
         // handling the exception on creating a log
     }
 
-Open a Log
+打开日志
 ~~~~~~~~~~
 
-A `DistributedLogManager` handle will be returned when opening a log by `#openLog(logName)`. The
-handle could be used for writing data to or reading data from the log. If the log doesn't exist
-and `createStreamIfNotExists` is set to true in the configuration, the log will be created
-automatically when writing first record.
+通过 `#openLog(logName)` 可以返回一个 `DistributedLogManager` 手柄。该手柄可以用来写入和读取日志数据。
+如果日志不存在并且 `createStreamIfNotExists` 设置为 true, 日志将会在写入第一个记录的时候被自动创建。
 
 ::
 
@@ -83,8 +79,7 @@ automatically when writing first record.
     // use the log manager to open writer to write data or open reader to read data
     ...
 
-Sometimes, applications may open a log with different configuration settings. It could be done via
-a overloaded `#openLog` method, as below:
+有时, 应用可以在打开日志的时候传入不同的参数。可以通过调用重载方法 `#openLog` 用法如下：
 
 ::
 
@@ -108,12 +103,10 @@ a overloaded `#openLog` method, as below:
         Optional.of(logConf),
         Optiona.absent());
 
-Delete a Log
+删除日志
 ~~~~~~~~~~~~
 
-`DistributedLogNamespace#deleteLog(logName)` will deletes the log from the namespace. Deleting a log
-will attempt acquiring a lock before deletion. If a log is writing by an active writer, the lock
-would be already acquired by the writer. so the deleting will fail.
+`DistributedLogNamespace#deleteLog(logName)` 可以删除名空间下的日志。删除日志操作会先试图获取锁，如果该日志正在被一个活跃的 writer 写入，那么锁已经被这个活跃的 writer 获取了，删除将失败。
 
 ::
 
@@ -124,10 +117,10 @@ would be already acquired by the writer. so the deleting will fail.
         // handle the exceptions
     }
 
-Log Existence
+日志是否存在
 ~~~~~~~~~~~~~
 
-Applications could check whether a log exists in a namespace by calling `DistributedLogNamespace#logExists(logName)`.
+应用可以通过调用 `DistributedLogNamespace#logExists(logName)` 来检查名空间下的日志是否存在。
 
 ::
 
@@ -138,10 +131,10 @@ Applications could check whether a log exists in a namespace by calling `Distrib
         // actions when log doesn't exist
     }
 
-Get List of Logs
+获取日志列表
 ~~~~~~~~~~~~~~~~
 
-Applications could list the logs under a namespace by calling `DistributedLogNamespace#getLogs()`.
+应用可以通过调用 `DistributedLogNamespace#getLogs()` 获取日志列表。
 
 ::
 
@@ -155,15 +148,12 @@ Applications could list the logs under a namespace by calling `DistributedLogNam
 Writer API
 ----------
 
-There are two ways to write records into a log stream, one is using 'synchronous' `LogWriter`, while the other one is using
-asynchronous `AsyncLogWriter`.
+将记录写入日志流由两个方法：一是使用同步的 `LogWriter`, 另一种是使用异步的 `AsyncLogWriter`.
 
 LogWriter
 ~~~~~~~~~
 
-The first thing to write data into a log stream is to construct the writer instance. Please note that the distributedlog core library enforce single-writer
-semantic by deploying a zookeeper locking mechanism. If there is only an active writer, the subsequent calls to `#startLogSegmentNonPartitioned()` will
-fail with `OwnershipAcquireFailedException`.
+在写入数据到日志流之前首先要构建一个 writer 实例。请注意，distributedlog 核心库通过 zookeeper 的锁机制来强制执行 *单写入者(single-writer)*语义。如果已经有一个活跃的 writer, 后续对 `#startLogSegmentNonPartitioned()` 的调用将会触发异常：`OwnershipAcquireFailedException`.
 
 ::
     
@@ -173,10 +163,8 @@ fail with `OwnershipAcquireFailedException`.
 
 .. _Construct Log Record:
 
-Log records are constructed to represent the data written to a log stream. Each log record is associated with application defined transaction id.
-The transaction id has to be non-decreasing otherwise writing the record will be rejected with `TransactionIdOutOfOrderException`. Application is allowed to
-bypass the transaction id sanity checking by setting `maxIdSanityCheck` to false in configuration. System time and atomic numbers are good candicates used for
-transaction id.
+通过创建日志记录来代表写入日志流的数据，每个日志记录都关联着应用定义业务编号(transaction id)。
+业务编号不能是递减的，否则写入记录将会被拒绝，对应的异常是 `TransactionIdOutOfOrderException`. 应用允许通过设置 `maxIdSanityCheck` 为 false 来绕过业务编号的正常性检查。系统时间和原子序数是作为业务编号的不错的选择。
 
 ::
 
@@ -184,7 +172,7 @@ transaction id.
     byte[] data = ...;
     LogRecord record = new LogRecord(txid, data);
 
-Application could either add a single record (via `#write(LogRecord)`) or a bunch of records (via `#writeBulk(List<LogRecord>)`) into the log stream.
+应用可以添加一个记录 (通过 `#write(LogRecord)`) 或者一串记录 (通过 `#writeBulk(List<LogRecord>)`) 到日志流。
 
 ::
 
@@ -194,9 +182,7 @@ Application could either add a single record (via `#write(LogRecord)`) or a bunc
     records.add(record);
     writer.writeBulk(records);
 
-The write calls return immediately after the records are added into the output buffer of writer. So the data isn't guaranteed to be durable until writer
-explicitly calls `#setReadyToFlush()` and `#flushAndSync()`. Those two calls will first transmit buffered data to backend, wait for transmit acknowledges
-and commit the written data to make them visible to readers.
+在记录被写入到 writer 的输出缓冲区后，写入调用就立即返回了。所以数据并不保证是持久的直到 writer 显示的调用 `#setReadyToFlush()` 和 `#flushAndSync()`. 这两个方法的调用将首先把缓冲的数据传输到后端，等待确认，然后提交刚才写入的数据以使它们对 readers 可见。
 
 ::
 
@@ -205,8 +191,7 @@ and commit the written data to make them visible to readers.
     // commit the records to make them visible to readers
     writer.flushAndSync();
 
-The DL log streams are endless streams unless they are sealed. 'endless' means that writers keep writing records to the log streams, readers could keep
-tailing reading from the end of the streams and it never stops. Application could seal a log stream by calling `#markEndOfStream()`.
+DL 的日志流是无终止的(endless)除非被封存。无终止意思是 writers 一直往里写记录，readers 一直从另一头读记录，永不停止。应用可以通过调用 `#markEndOfStream()` 来封存日志流.
 
 ::
 
@@ -214,7 +199,7 @@ tailing reading from the end of the streams and it never stops. Application coul
     writer.markEndOfStream();
     
 
-The complete example of writing records is showed as below.
+写入记录的完整例子展示如下：
 
 ::
 
@@ -238,7 +223,7 @@ The complete example of writing records is showed as below.
 AsyncLogWriter
 ~~~~~~~~~~~~~~
 
-Constructing an asynchronous `AsyncLogWriter` is as simple as synchronous `LogWriter`.
+构建一个异步的 `AsyncLogWriter` 简单如构建一个同步的 `LogWriter`.
 
 ::
 
@@ -246,9 +231,9 @@ Constructing an asynchronous `AsyncLogWriter` is as simple as synchronous `LogWr
     DistributedLogManager dlm = namespace.openLog("test-log");
     AsyncLogWriter writer = dlm.startAsyncLogSegmentNonPartitioned();
 
-All the writes to `AsyncLogWriter` are asynchronous. The futures representing write results are only satisfied when the data are persisted in the stream durably.
-A DLSN (distributedlog sequence number) will be returned for each write, which is used to represent the position (aka offset) of the record in the log stream.
-All the records adding in order are guaranteed to be persisted in order.
+所有 `AsyncLogWriter` 的写入都是异步的。这里 futures 表示写入结果只有在数据被持久化的日志流才算完成。
+一个 DLSN (distributedlog sequence number) 将会被返回给每个 write 调用， DLSN 用来表示一个记录在日志流里的位置 (即 offset)。
+所有记录的持久化顺序保证与写入顺序一致。
 
 .. _Async Write Records:
 
@@ -262,8 +247,7 @@ All the records adding in order are guaranteed to be persisted in order.
     }
     List<DLSN> addResults = Await.result(Future.collect(addFutures));
 
-The `AsyncLogWriter` also provides the method to truncate a stream to a given DLSN. This is super helpful for building replicated state machines, who need
-explicit controls on when the data could be deleted.
+`AsyncLogWriter` 也提供截短日志流到给定的 DLSN 的方法。这对构建可复制状态机非常有帮助，构建它需要显式控制什么时候数据可以删除。
 
 ::
     
@@ -275,37 +259,27 @@ explicit controls on when the data could be deleted.
 Reader API
 ----------
 
-Sequence Numbers
+序列号
 ~~~~~~~~~~~~~~~~
 
-A log record is associated with sequence numbers. First of all, application can assign its own sequence number (called `TransactionID`)
-to the log record while writing it (see `Construct Log Record`_). Secondly, a log record will be assigned with an unique system generated sequence number
-`DLSN` (distributedlog sequence number) when it is written to a log (see `Async Write Records`_). Besides `DLSN` and `TransactionID`,
-a monotonically increasing 64-bits `SequenceId` is assigned to the record at read time, indicating its position within the log.
+日志记录与序列号关联。 首先，应用可以在写入时赋值自己的序列号 (叫作 `TransactionID`) 给日志记录。(查看 `Construct Log Record`_). 其次，在被写入日志时一个日志记录可以被赋值一个系统生成的唯一序列号 `DLSN` (distributedlog sequence number) (查看 `Async Write Records`_). 另外除了 `DLSN` 和 `TransactionID`, 在读取时一个单调递增的64位的 `SequenceId` 也被赋值给了日志记录，来标识记录在日志中的位置。
 
-:Transaction ID: Transaction ID is a positive 64-bits long number that is assigned by the application.
-    Transaction ID is very helpful when application wants to organize the records and position the readers using their own sequencing method. A typical
-    use case of `Transaction ID` is `DistributedLog Write Proxy`. The write proxy assigns non-decreasing timestamps to log records, which the timestamps
-    could be used as `physical time` to implement `TTL` (Time To Live) feature in a strong consistent database.
-:DLSN: DLSN (DistributedLog Sequence Number) is the sequence number generated during written time.
-    DLSN is comparable and could be used to figure out the order between records. A DLSN is comprised with 3 components. They are `Log Segment Sequence Number`,
-    `Entry Id` and `Slot Id`. The DLSN is usually used for comparison, positioning and truncation.
-:Sequence ID: Sequence ID is introduced to address the drawback of `DLSN`, in favor of answering questions like `how many records written between two DLSNs`.
-    Sequence ID is a 64-bits monotonic increasing number starting from zero. The sequence ids are computed during reading, and only accessible by readers.
-    That means writers don't know the sequence ids of records at the point they wrote them.
+:Transaction ID: 由应用赋值的一个正的64位长整型数。
+    在应用需要用自身的序列方法整理记录和定位读取者(readers)的时候 Transaction ID 是非常有用的。`Transaction ID` 的一个典型用例是 `DistributedLog Write Proxy`. 写入代理(write proxy)赋值非递减的时间戳给日志记录，在一个强一致性的数据库里，时间戳可以被用作物理时间(`physical time`)来实现 `TTL` (存活时间) 功能。
+:DLSN: DLSN (DistributedLog Sequence Number) 是在日志被写入时生成的序列号。
+    DLSN 可以互相比较进而可以用来判断记录间的顺序。一个 DLSN 由 3 部分组成，它们是：`Log Segment Sequence Number`, `Entry Id` 和 `Slot Id`. DLSN 通常用来比较，定位和截短日志。
+:Sequence ID: Sequence ID 被引入以解决 `DLSN` 的不足，尤其用来解决 `两个 DLSN 之间有多少记录` 这种问题。
+    Sequence ID 是一个从 0 开始的64位单调递增数。序列编号在读取时被计算出来，并且只能被读取者(readers)访问。这意味着写入者(writers)在写入时并不知道记录的序列编号。
 
-The readers could be positioned to start reading from any positions in the log, by using `DLSN` or `Transaction ID`.
+通过使用 `DLSN` or `Transaction ID` 读取者可以被定位到日志的任何位置开始读取。
 
 LogReader
 ~~~~~~~~~
 
-`LogReader` is a 'synchronous' sequential reader reading records from a log stream starting from a given position. The position could be
-`DLSN` (via `#getInputStream(DLSN)`) or `Transaction ID` (via `#getInputStream(long)`). After the reader is open, it could call either
-`#readNext(boolean)` or `#readBulk(boolean, int)` to read records out of the log stream sequentially. Closing the reader (via `#close()`)
-will release all the resources occupied by this reader instance.
+`LogReader` `同步`并顺序地从给定位置读取日志流。位置可以是 `DLSN` (通过 `#getInputStream(DLSN)`) 或者 `Transaction ID` (通过 `#getInputStream(long)`). 在这个读取者打开之后，它可以调用 
+`#readNext(boolean)` 或者 `#readBulk(boolean, int)` 来顺序的从日志流读出记录。关闭这个读取者 (通过 `#close()`) 将释放该实例占用的所有资源。
 
-Exceptions could be thrown during reading records due to various issues. Once the exception is thrown, the reader is set to an error state
-and it isn't usable anymore. It is the application's responsibility to handle the exceptions and re-create readers if necessary.
+在读取时遇到的各种问题将会抛出一些异常。在异常被抛出后，读取者被设置为错误状态，并不再可用。应用程序负责处理异常并在必要的时候创新创建读取者。
 
 ::
     
@@ -327,17 +301,12 @@ and it isn't usable anymore. It is the application's responsibility to handle th
         }
     }
 
-Reading records from an endless log stream in `synchronous` way isn't as trivial as in `asynchronous` way. Because it lacks of callback mechanism.
-Instead, `LogReader` introduces a flag `nonBlocking` on controlling the waiting behavior on `synchronous` reads. Blocking (`nonBlocking = false`)
-means the reads will wait for records before returning read calls, while NonBlocking (`nonBlocking = true`) means the reads will only check readahead
-cache and return whatever records available in readahead cache.
+在读取一个无终止的日志流时，`同步读` 并不像`异步读` 那样微不足道。因为同步读却少回调机制。相反地，`LogReader` 引入 `nonBlocking` 标识来控制 `同步读` 时的等待行为。 阻塞 (`nonBlocking = false`) 意思是读取调用返回前会一直等待记录，而非阻塞 (`nonBlocking = true`) 意思是读取只检查预读缓存并返回缓存里任何可用的记录。
 
-The `waiting` period varies in `blocking` mode. If the reader is catching up with writer (there are plenty of records in the log), the read call will
-wait until records are read and returned. If the reader is already caught up with writer (there are no more records in the log at read time), the read
-call will wait for a small period of time (defined in `DistributedLogConfiguration#getReadAheadWaitTime()`) and return whatever records available in
-readahead cache. In other words, if a reader sees no record on blocking reads, it means the reader is `caught-up` with the writer.
+`阻塞` 模式里 `等待周期` 有多种。如果读取者没有追上写入者 (日志中有大量的未读记录), 读取只等到记录被读取并返回。如果读取者追上了写入者 (读取时日志中没有可读记录), 读取将等待一小段时间
+ (定义在 `DistributedLogConfiguration#getReadAheadWaitTime()`) 然后返回预读缓存中任何可用的记录。换句话说，阻塞模式读去时当读取者看不到可用记录时，意味着读取者`追上` 了写入者。
 
-See examples below on how to read records using `LogReader`.
+关于如何使用 `LogReader` 读取记录，示例如下：
 
 ::
 
@@ -398,7 +367,7 @@ See examples below on how to read records using `LogReader`.
 AsyncLogReader
 ~~~~~~~~~~~~~~
 
-Similar as `LogReader`, applications could open an `AsyncLogReader` by positioning to different positions, either `DLSN` or `Transaction ID`.
+与 `LogReader` 类似，应用程序可以打开一个 `AsyncLogReader` 并定位到不同的位置，通过 `DLSN` 或者 `Transaction ID`.
 
 ::
     
@@ -415,11 +384,10 @@ Similar as `LogReader`, applications could open an `AsyncLogReader` by positioni
 
     AsyncLogReader reader = Await.result(openFuture);
 
-Reading records from an `AsyncLogReader` is asynchronously. The future returned by `#readNext()`, `#readBulk(int)` or `#readBulk(int, long, TimeUnit)`
-represents the result of the read operation. The future is only satisfied when there are records available. Application could chain the futures
-to do sequential reads.
+通过 `AsyncLogReader` 读取记录是异步的。`#readNext()`, `#readBulk(int)` 或者 `#readBulk(int, long, TimeUnit)` 返回的 future 表示读取操作的结果。
+只有在有可用的记录时，future 才有值。应用程序可以将 futures 串接来进行顺序读取。
 
-Reading records one by one from an `AsyncLogReader`.
+从 `AsyncLogReader` 里逐个读取记录：
 
 ::
 
@@ -444,7 +412,7 @@ Reading records one by one from an `AsyncLogReader`.
     AsyncLogReader reader = ...;
     readOneRecord(reader);
 
-Reading records in batches from an `AsyncLogReader`.
+从 `AsyncLogReader` 里批量读取记录：
 
 ::
 
